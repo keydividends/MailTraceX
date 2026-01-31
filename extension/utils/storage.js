@@ -1,5 +1,5 @@
 // utils/storage.js - wrapper around chrome.storage.sync
-export async function setItem(key, value) {
+async function setItem(key, value) {
   return new Promise((resolve) => {
     const payload = {};
     payload[key] = value;
@@ -7,43 +7,52 @@ export async function setItem(key, value) {
   });
 }
 
-export async function getItem(key) {
+async function getItem(key) {
   return new Promise((resolve) => {
     chrome.storage.sync.get([key], (res) => resolve(res[key]));
   });
 }
 
-export async function removeItem(key) {
+async function removeItem(key) {
   return new Promise((resolve) => {
     chrome.storage.sync.remove([key], () => resolve());
   });
 }
 
 // Higher-level token helpers
-export async function saveToken(token) {
+async function saveToken(token) {
   return setItem('jwt', token);
 }
 
-export async function getToken() {
+async function getToken() {
   return getItem('jwt');
 }
 
-export async function clearToken() {
+async function clearToken() {
   return removeItem('jwt');
 }
 
-export async function saveUser(user) {
+async function saveUser(user) {
   return setItem('user', user);
 }
 
-export async function getUser() {
+async function getUser() {
   return getItem('user');
 }
 
-export async function clearAll() {
+async function clearAll() {
   return new Promise((resolve) => {
     chrome.storage.sync.clear(() => resolve());
   });
 }
 
-export default { setItem, getItem, removeItem, saveToken, getToken, clearToken, saveUser, getUser, clearAll };
+// Expose globally
+window.setItem = setItem;
+window.getItem = getItem;
+window.removeItem = removeItem;
+window.saveToken = saveToken;
+window.getToken = getToken;
+window.clearToken = clearToken;
+window.saveUser = saveUser;
+window.getUser = getUser;
+window.clearAll = clearAll;
