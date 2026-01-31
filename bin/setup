@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Mail TraceX setup — installing Node (if needed) and workspace dependencies"
+
+# Load nvm if present
+if [ -n "${NVM_DIR-}" ] && [ -s "$NVM_DIR/nvm.sh" ]; then
+  # shellcheck source=/dev/null
+  . "$NVM_DIR/nvm.sh"
+fi
+
+if command -v nvm >/dev/null 2>&1; then
+  echo "nvm detected — installing and using LTS node"
+  nvm install --lts
+  nvm use --lts
+elif command -v node >/dev/null 2>&1; then
+  echo "node already installed: $(node -v)"
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "npm not found. If Node was installed via nvm or as a minimal bundle, install npm or reinstall Node." >&2
+    echo "Suggested commands (macOS):" >&2
+    echo "  # using Homebrew:" >&2
+    echo "  brew install node" >&2
+    echo "  # or using nvm (recommended):" >&2
+    echo "  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash" >&2
+    echo "  nvm install --lts" >&2
+    exit 1
+  fi
+elif command -v brew >/dev/null 2>&1; then
+  echo "Homebrew detected — installing node via brew"
+  brew install node || true
+else
+  echo "No nvm or node detected. Please install Node.js and npm and re-run this script." >&2
+  echo "Quick install options (macOS):" >&2
+  echo "  # Homebrew (simple):" >&2
+  echo "  brew update && brew install node" >&2
+  echo "  # nvm (recommended for multiple versions):" >&2
+  echo "  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash" >&2
+  echo "  nvm install --lts && nvm use --lts" >&2
+  echo "See README.md for more details: https://github.com/keydividends/MailTraceX" >&2
+  exit 1
+fi
+
+echo "Node: $(node -v)"
+echo "npm: $(npm -v)"
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR"
+
+echo "Installing root dependencies..."
+if [ -f package.json ]; then
+  npm install
+fi
+
+for pkg in backend web; do
+  if [ -f "$pkg/package.json" ]; then
+    echo "Installing dependencies in $pkg..."
+    (cd "$pkg" && npm install)
+  fi
+done
+
+echo "Setup complete. Start development with: npm run dev (root uses turbo) or run each workspace directly."

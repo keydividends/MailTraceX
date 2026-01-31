@@ -1,0 +1,20 @@
+{
+  "name": "mail-tracex",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "backend",
+    "web",
+    "extension",
+    "shared"
+  ],
+  "scripts": {
+    "bootstrap": "echo 'Install dependencies in each workspace'",
+    "dev": "turbo run dev",
+    "setup": "bash ./bin/setup"
+  },
+  "devDependencies": {
+    "turbo": "^1.6.3",
+    "pm2": "^5.2.0"
+  }
+}
