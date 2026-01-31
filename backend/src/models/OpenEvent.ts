@@ -1,13 +1,19 @@
-// Mongoose schema for OpenEvent
-import { Schema, model } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
-const OpenEventSchema = new Schema({
-  emailId: { type: Schema.Types.ObjectId, ref: 'Email' },
-  recipientId: { type: Schema.Types.ObjectId, ref: 'Recipient' },
-  ip: String,
-  userAgent: String,
-  geo: Schema.Types.Mixed,
-  createdAt: { type: Date, default: Date.now }
+export interface IOpenEvent extends Document {
+  emailId: mongoose.Types.ObjectId | string;
+  timestamp: Date;
+  ip?: string;
+  userAgent?: string;
+  recipientToken?: string;
+}
+
+const OpenEventSchema = new Schema<IOpenEvent>({
+  emailId: { type: Schema.Types.ObjectId, ref: 'Email', required: true },
+  timestamp: { type: Date, default: Date.now },
+  ip: { type: String },
+  userAgent: { type: String },
+  recipientToken: { type: String, index: true }
 });
 
-export default model('OpenEvent', OpenEventSchema);
+export default mongoose.model<IOpenEvent>('OpenEvent', OpenEventSchema);

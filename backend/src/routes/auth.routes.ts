@@ -1,14 +1,11 @@
-// Auth routes: register, login, refresh tokens
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
+import { register, login, refreshToken } from '../controllers/authController';
 
 const router = Router();
 
-router.post('/register', (req: Request, res: Response) => {
-  res.status(501).json({ message: 'Not implemented' });
-});
-
-router.post('/login', (req: Request, res: Response) => {
-  res.status(501).json({ message: 'Not implemented' });
-});
+router.post('/register', register);
+router.post('/login', login);
+router.post('/refresh', refreshToken);
 
 export default router;
+

@@ -1,14 +1,21 @@
-// Mongoose schema for ClickEvent
-import { Schema, model } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
-const ClickEventSchema = new Schema({
-  emailId: { type: Schema.Types.ObjectId, ref: 'Email' },
-  recipientId: { type: Schema.Types.ObjectId, ref: 'Recipient' },
-  url: String,
-  ip: String,
-  userAgent: String,
-  geo: Schema.Types.Mixed,
-  createdAt: { type: Date, default: Date.now }
+export interface IClickEvent extends Document {
+  emailId: mongoose.Types.ObjectId | string;
+  timestamp: Date;
+  ip?: string;
+  userAgent?: string;
+  url: string;
+  recipientToken?: string;
+}
+
+const ClickEventSchema = new Schema<IClickEvent>({
+  emailId: { type: Schema.Types.ObjectId, ref: 'Email', required: true },
+  timestamp: { type: Date, default: Date.now },
+  ip: { type: String },
+  userAgent: { type: String },
+  url: { type: String, required: true },
+  recipientToken: { type: String, index: true }
 });
 
-export default model('ClickEvent', ClickEventSchema);
+export default mongoose.model<IClickEvent>('ClickEvent', ClickEventSchema);
