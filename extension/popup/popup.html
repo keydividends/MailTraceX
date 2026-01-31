@@ -7,6 +7,56 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
+    <div class="container">
+      <h1>Mail TraceX</h1>
+
+      <!-- Loading indicator -->
+      <div id="loading" style="display:none">Loading…</div>
+
+      <!-- Error message -->
+      <div id="error" style="display:none;color:#b00020;margin:8px 0"></div>
+
+      <!-- Login form -->
+      <div id="loginContainer">
+        <div>
+          <label>Email</label>
+          <input id="email" type="email" placeholder="you@company.com" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="password" type="password" />
+        </div>
+        <div style="margin-top:8px">
+          <button id="loginBtn">Login</button>
+        </div>
+      </div>
+
+      <!-- Logged-in state -->
+      <div id="loggedInContainer" style="display:none">
+        <div>Signed in as <strong id="userEmail"></strong></div>
+        <div class="stats">
+          <div>Opens: <span id="opens">—</span></div>
+          <div>Clicks: <span id="clicks">—</span></div>
+        </div>
+        <div class="actions">
+          <button id="openDashboard">Open Dashboard</button>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
+
+    </div>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mail TraceX</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
     <div id="root">
       <h1>Mail TraceX</h1>
       <div id="status">Not authenticated</div>

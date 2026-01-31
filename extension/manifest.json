@@ -1,15 +1,33 @@
 {
   "manifest_version": 3,
-  "name": "Mail TraceX Extension",
+  "name": "Mail TraceX",
   "version": "0.1.0",
-  "description": "Inject tracking pixel, rewrite links, and show quick analytics.",
+  "description": "Gmail-integrated tracking helper for Mail TraceX (skeleton).",
   "permissions": ["storage", "activeTab", "scripting"],
-  "background": { "service_worker": "background.js" },
-  "action": { "default_popup": "popup/popup.html" },
+  "host_permissions": [
+    "https://mailtracex.local/*",
+    "http://localhost:4000/*",
+    "https://mail.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Mail TraceX"
+  },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["contentScript.js"]
+      "matches": ["https://mail.google.com/*"],
+      "js": ["contentScript.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["gmail.js"],
+      "matches": ["https://mail.google.com/*"]
     }
   ]
 }
+
