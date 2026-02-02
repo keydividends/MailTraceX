@@ -47,12 +47,12 @@ async function clearAll() {
 }
 
 // Expose globally
-window.setItem = setItem;
-window.getItem = getItem;
-window.removeItem = removeItem;
-window.saveToken = saveToken;
-window.getToken = getToken;
-window.clearToken = clearToken;
-window.saveUser = saveUser;
-window.getUser = getUser;
-window.clearAll = clearAll;
+self.setItem = setItem;
+self.getItem = getItem;
+self.removeItem = removeItem;
+self.saveToken = saveToken;
+self.getToken = getToken;
+self.clearToken = clearToken;
+self.saveUser = saveUser;
+self.getUser = getUser;
+self.clearAll = clearAll;

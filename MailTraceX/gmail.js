@@ -7,7 +7,7 @@ console.log("[MailTraceX][gmail] loaded");
   "use strict";
 
   const SOURCE = "mailtracex-gmail";
-  const composes = new Map<string, { node: HTMLElement }>();
+  const composes = new Map();
   let sendInProgress = false;
 
   function uid() {
@@ -16,7 +16,7 @@ console.log("[MailTraceX][gmail] loaded");
 
   // ---------- Helpers ----------
 
-  function isVisible(el: HTMLElement | null): boolean {
+  function isVisible(el) {
     try {
       if (!el) return false;
       if (el.offsetParent === null) return false;
@@ -30,10 +30,10 @@ console.log("[MailTraceX][gmail] loaded");
 
   // ---------- Compose detection ----------
 
-  function findComposeElements(root: Document | HTMLElement = document): HTMLElement[] {
-    const results = new Set<HTMLElement>();
+  function findComposeElements(root = document) {
+    const results = new Set();
 
-    (root.querySelectorAll('div[role="dialog"]') as NodeListOf<HTMLElement>).forEach((el) => {
+    root.querySelectorAll('div[role="dialog"]').forEach(el => {
       if (
         el.querySelector('input[name="subjectbox"]') ||
         el.querySelector('[aria-label="Message Body"]') ||
@@ -43,50 +43,67 @@ console.log("[MailTraceX][gmail] loaded");
       }
     });
 
-    (root.querySelectorAll('div[aria-label="New Message"]') as NodeListOf<HTMLElement>).forEach((el) => results.add(el));
-    (root.querySelectorAll('div[aria-label^="Reply"], div[aria-label*="Reply all"]') as NodeListOf<HTMLElement>).forEach((el) => results.add(el));
+    root.querySelectorAll('div[aria-label="New Message"]').forEach(el => results.add(el));
+    root.querySelectorAll('div[aria-label^="Reply"], div[aria-label*="Reply all"]').forEach(el => results.add(el));
 
     return Array.from(results);
   }
 
-  function registerCompose(node: HTMLElement | null): string | undefined {
-    if (!node) return undefined;
+  let primaryComposeId = null;
 
-    // Ignore hidden Gmail clones
-    if (!isVisible(node)) {
-      console.log("[MailTraceX][gmail] ignoring hidden compose", node);
-      return;
-    }
+function registerCompose(node) {
+  if (!node) return;
 
-    // Ignore composes created after send click
-    if (sendInProgress) {
-      console.log("[MailTraceX][gmail] ignoring compose created after send", node);
-      return;
-    }
-
-    for (const [id, info] of composes.entries()) {
-      if (info.node === node) return id;
-    }
-
-    const id = uid();
-    composes.set(id, { node });
-    try { node.setAttribute("data-mtx-compose-id", id); } catch (e) { /* ignore */ }
-
-    console.log("[MailTraceX][gmail] compose detected", id, node);
-
-    attachSendHandler(id, node);
-    return id;
+  // Ignore hidden Gmail clones
+  if (!isVisible(node)) {
+    console.log("[MailTraceX][gmail] ignoring hidden compose", node);
+    return;
   }
+
+  // Ignore composes created after send click
+  if (sendInProgress) {
+    console.log("[MailTraceX][gmail] ignoring compose created after send", node);
+    return;
+  }
+
+  // Only allow ONE compose window to register
+  if (primaryComposeId !== null) {
+    console.log("[MailTraceX][gmail] ignoring secondary compose", node);
+    return;
+  }
+
+  // Register the FIRST compose only
+  const id = uid();
+  primaryComposeId = id;
+
+  composes.set(id, { node });
+  node.setAttribute("data-mtx-compose-id", id);
+
+  console.log("[MailTraceX][gmail] PRIMARY compose detected", id, node);
+
+  attachSendHandler(id, node);
+  return id;
+}
+
 
   function unregisterCompose(id) {
     const info = composes.get(id);
     if (!info) return;
+
     composes.delete(id);
+
+    // 🔹 If this was the primary compose, allow a new one next time
+    if (id === primaryComposeId) {
+      primaryComposeId = null;
+      sendInProgress = false;
+      console.log("[MailTraceX][gmail] primary compose unregistered, state reset");
+    }
   }
+
 
   // ---------- Send button detection ----------
 
-  function findRealSendButton(composeEl: HTMLElement): HTMLElement | null {
+  function findRealSendButton(composeEl) {
     const selectors = [
       'div[role="button"][aria-label="Send"]',
       'div[aria-label="Send"]',
@@ -95,14 +112,14 @@ console.log("[MailTraceX][gmail] loaded");
     ];
 
     for (const sel of selectors) {
-      const btn = composeEl.querySelector(sel) as HTMLElement | null;
+      const btn = composeEl.querySelector(sel);
       if (btn && isVisible(btn)) return btn;
     }
 
     return null;
   }
 
-  function attachSendHandler(composeId: string, composeEl: HTMLElement) {
+  function attachSendHandler(composeId, composeEl) {
     const btn = findRealSendButton(composeEl);
     if (!btn) {
       console.log("[MailTraceX][gmail] No real send button found for", composeId);
@@ -117,7 +134,7 @@ console.log("[MailTraceX][gmail] loaded");
 
   // ---------- Metadata extraction ----------
 
-  function findEditorDoc(): Document {
+  function findEditorDoc() {
     for (let i = 0; i < window.frames.length; i++) {
       try {
         const frame = window.frames[i];
@@ -135,33 +152,35 @@ console.log("[MailTraceX][gmail] loaded");
     return document;
   }
 
-  function getSubject(composeEl: HTMLElement): string {
+  function getSubject(composeEl) {
     const el =
-      (composeEl.querySelector('input[name="subjectbox"]') as HTMLInputElement | null) ||
-      (composeEl.querySelector('input[aria-label*="Subject"]') as HTMLInputElement | null) ||
-      (document.querySelector('input[name="subjectbox"]') as HTMLInputElement | null);
+      composeEl.querySelector('input[name="subjectbox"]') ||
+      composeEl.querySelector('input[aria-label*="Subject"]') ||
+      document.querySelector('input[name="subjectbox"]');
     return (el && el.value && el.value.trim()) || "";
   }
 
-  function getRecipients(composeEl: HTMLElement): string[] {
-    const recipients = new Set<string>();
+  function getRecipients(composeEl) {
+    const recipients = new Set();
 
-    (composeEl.querySelectorAll("span[email], [email]") as NodeListOf<HTMLElement>).forEach((p: HTMLElement) => {
+    composeEl.querySelectorAll("span[email], [email]").forEach(p => {
       const e = p.getAttribute("email");
       if (e) recipients.add(e.trim());
     });
 
-    (composeEl.querySelectorAll('textarea[name="to"], input[type="email"], input[name="to"], div[aria-label="To"]') as NodeListOf<Element>).forEach((n: Element) => {
-      const v = ((n as HTMLInputElement).value as string) || (n.textContent || '') || (n.getAttribute && (n.getAttribute("data-legacy-email") || ''));
-      if (v) {
-        v.split(/[,\n;]+/).map((x: string) => x.trim()).filter(Boolean).forEach((x: string) => recipients.add(x));
-      }
-    });
+    composeEl
+      .querySelectorAll('textarea[name="to"], input[type="email"], input[name="to"], div[aria-label="To"]')
+      .forEach(n => {
+        const v = n.value || n.textContent || n.getAttribute("data-legacy-email");
+        if (v) {
+          v.split(/[,\n;]+/).map(x => x.trim()).filter(Boolean).forEach(x => recipients.add(x));
+        }
+      });
 
     return Array.from(recipients);
   }
 
-  function getBodyHtml(): string {
+  function getBodyHtml() {
     const editorDoc = findEditorDoc();
 
     const bodyEl =
@@ -170,7 +189,7 @@ console.log("[MailTraceX][gmail] loaded");
 
     if (!bodyEl) return "";
 
-    let html = (bodyEl as HTMLElement).innerHTML || "";
+    let html = bodyEl.innerHTML || "";
     if (!html) return "";
 
     const stripped = html.replace(/(&nbsp;|\s|<br\s*\/?>)/gi, "").trim();
@@ -181,7 +200,7 @@ console.log("[MailTraceX][gmail] loaded");
 
   // ---------- Send handler ----------
 
-  function createSendClickHandler(composeId: string, composeEl: HTMLElement): () => void {
+  function createSendClickHandler(composeId, composeEl) {
     return function () {
       sendInProgress = true;
 

@@ -79,6 +79,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const token = await getToken();
     if (token) {
       chrome.runtime.sendMessage({ type: 'auth:getInfo' }, (resp) => {
+         if (chrome.runtime.lastError) {
+            // Popup closed or port closed — safe to ignore
+            return;
+          }
         const email = resp && (resp.user && resp.user.email) ? resp.user.email : (resp && resp.email ? resp.email : '');
         showLoggedIn(email);
         chrome.runtime.sendMessage({ type: 'stats:get' }, (sresp) => {

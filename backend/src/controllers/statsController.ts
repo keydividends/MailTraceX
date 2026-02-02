@@ -19,6 +19,7 @@ export async function getSummary(req: Request, res: Response) {
     const totalOpens = await OpenEvent.countDocuments({ emailId: { $in: emailIds } }).exec();
     const totalClicks = await ClickEvent.countDocuments({ emailId: { $in: emailIds } }).exec();
 
+    res.set('Cache-Control', 'no-store');
     return res.json({ ok: true, totalOpens: totalOpens || 0, totalClicks: totalClicks || 0 });
   } catch (err) {
     console.error('getSummary error', err);

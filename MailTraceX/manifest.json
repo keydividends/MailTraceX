@@ -17,12 +17,14 @@
     "default_title": "Mail TraceX"
   },
   "content_scripts": [
-    {
-      "matches": ["https://mail.google.com/*"],
-      "js": ["contentScript.js"],
-      "run_at": "document_idle"
-    }
-  ],
+  {
+    "matches": ["https://mail.google.com/*"],
+    "js": ["contentScript.js"],
+    "all_frames": true,
+    "match_about_blank": true,
+    "run_at": "document_start"
+  }
+ ],
   "web_accessible_resources": [
     {
       "resources": ["gmail.js"],
