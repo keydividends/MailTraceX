@@ -37,22 +37,8 @@ window.addEventListener("message", (event) => {
    // chrome.runtime.sendMessage({ type: "ping" }, () => {
     // Give Chrome a moment to fully wake the worker
    // setTimeout(() => {
-      chrome.runtime.sendMessage(
-        {
-          type: "email:create",
-          payload
-        },
-        (resp) => {
-          window.postMessage(
-            {
-              source: EXT_SOURCE,
-              type: "email:create:response",
-              resp
-            },
-            "*"
-          );
-        }
-      );
+      chrome.runtime.sendMessage({ type: "email:create", payload });
+
     //}, 50); // 50ms is enough
   //});
 
